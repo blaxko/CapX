@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CapX — On-Chain Budget Enforcement for AI Agent Fleets</title>
+<style>
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/space-grotesk/1.0.0/space-grotesk.css');
+  :root {
+    --bg: #0a0a0b;
+    --bg-raised: rgba(255,255,255,0.035);
+    --border: rgba(255,255,255,0.08);
+    --text: #f4f4f5;
+    --text-dim: #8a8a92;
+    --green: #39ff9e;
+    --green-dim: rgba(57,255,158,0.14);
+    --red: #ff4d5e;
+    --red-dim: rgba(255,77,94,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  a:focus-visible, button:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--green); outline-offset: 3px; border-radius: 6px;
+  }
+  .skip-link {
+    position: absolute; left: 12px; top: -60px; z-index: 100;
+    background: var(--green); color: #05130b; font-weight: 700;
+    padding: 10px 16px; border-radius: 8px; font-size: 14px; transition: top 0.15s ease;
+  }
+  .skip-link:focus { top: 12px; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  body {
+    background: radial-gradient(circle at 20% 0%, #101014 0%, #0a0a0b 55%);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+  }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+  a { color: inherit; text-decoration: none; }
+
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 40px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(10,10,11,0.85); backdrop-filter: blur(12px); z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--green), #0a5c39);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #05130b; font-size: 14px;
+  }
+  .brand span { font-size: 16px; font-weight: 600; }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--text-dim); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 9px;
+    background: var(--green); color: #05130b;
+  }
+  .nav-cta:hover { background: #4fffb0; }
+
+  section { padding: 90px 40px; max-width: 1180px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green);
+    border: 1px solid rgba(57,255,158,0.3); background: var(--green-dim);
+    padding: 6px 12px; border-radius: 999px; margin-bottom: 26px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .hero { text-align: center; padding-top: 70px; padding-bottom: 60px; }
+  .hero h1 { font-size: clamp(38px, 6vw, 68px); line-height: 1.06; max-width: 900px; margin: 0 auto 22px; }
+  .hero h1 .accent { color: var(--green); }
+  .hero p.sub { color: var(--text-dim); font-size: 18px; max-width: 620px; margin: 0 auto 36px; line-height: 1.55; }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+  .btn { font-family: inherit; font-size: 15px; font-weight: 600; padding: 14px 26px; border-radius: 11px; border: 1px solid var(--border); cursor: pointer; display: inline-block; }
+  .btn-primary { background: var(--green); color: #05130b; border-color: var(--green); }
+  .btn-primary:hover { background: #4fffb0; }
+  .btn-ghost { background: rgba(255,255,255,0.03); color: var(--text); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+
+  /* terminal mock — signature element */
+  .terminal {
+    max-width: 720px; margin: 0 auto; text-align: left;
+    background: var(--bg-raised); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; box-shadow: 0 30px 80px -30px rgba(57,255,158,0.08);
+  }
+  .terminal-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .terminal-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+  .terminal-title { margin-left: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim); }
+  .terminal-body { padding: 20px 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2; }
+  .t-approved { color: var(--green); }
+  .t-rejected { color: var(--red); }
+  .t-dim { color: var(--text-dim); }
+
+  .stat-strip { display: flex; justify-content: center; gap: 60px; padding: 40px 0 0; flex-wrap: wrap; border-top: 1px solid var(--border); margin-top: 60px; }
+  .stat-strip .item { text-align: center; }
+  .stat-strip .num { font-size: 30px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--green); }
+  .stat-strip .label { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+
+  .section-head { text-align: center; margin-bottom: 50px; }
+  .section-head .eyebrow { margin-bottom: 16px; }
+  .section-head h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 14px; }
+  .section-head p { color: var(--text-dim); font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .compare { grid-template-columns: 1fr; } }
+  .compare-card { border: 1px solid var(--border); border-radius: 18px; padding: 30px; background: var(--bg-raised); }
+  .compare-card.bad { opacity: 0.75; }
+  .compare-card.good { border-color: rgba(57,255,158,0.3); box-shadow: 0 20px 60px -30px rgba(57,255,158,0.15); }
+  .compare-card h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 20px; color: var(--text-dim); }
+  .compare-card.good h3 { color: var(--green); }
+  .compare-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14.5px; }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .icon { flex-shrink: 0; width: 18px; }
+
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  @media (max-width: 900px) { .flow { grid-template-columns: repeat(2, 1fr); } }
+  .flow-card { border: 1px solid var(--border); border-radius: 16px; padding: 22px; background: var(--bg-raised); }
+  .flow-num { font-family: 'JetBrains Mono', monospace; color: var(--green); font-size: 13px; margin-bottom: 12px; }
+  .flow-card h4 { font-size: 15.5px; margin-bottom: 8px; }
+  .flow-card p { color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
+
+  .cta-band {
+    text-align: center; border: 1px solid var(--border); border-radius: 22px;
+    padding: 64px 40px; background: linear-gradient(180deg, rgba(57,255,158,0.06), transparent);
+  }
+  .cta-band h2 { font-size: clamp(26px, 4vw, 36px); margin-bottom: 14px; }
+  .cta-band p { color: var(--text-dim); margin-bottom: 30px; }
+
+  footer { border-top: 1px solid var(--border); padding: 34px 40px; text-align: center; color: var(--text-dim); font-size: 13px; }
+  footer .mono { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<nav aria-label="Primary">
+  <div class="brand">
+    <div class="brand-mark display" aria-hidden="true">C</div>
+    <span class="display">CapX</span>
+  </div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#why">Why on-chain</a>
+    <a href="#demo">Payment flow</a>
+  </div>
+  <a class="nav-cta" href="dashboard.html">Launch Dashboard<span class="visually-hidden"> (opens the live budget console)</span></a>
+</nav>
+
+<main id="main">
+
+<section class="hero" aria-label="Introduction">
+  <div class="eyebrow"><span class="dot" aria-hidden="true"></span> A2MCP SERVICE · LIVE ON OKX.AI</div>
+  <h1 class="display">On-chain budget enforcement<br>for <span class="accent">AI agent fleets</span></h1>
+  <p class="sub">Secure every autonomous payment with programmable spending caps on X Layer. One API call, and no sub-agent can spend past what it was allocated — because the chain, not the code, stops it.</p>
+  <div class="hero-ctas">
+    <a class="btn btn-primary" href="dashboard.html">Launch Dashboard<span aria-hidden="true"> →</span></a>
+    <a class="btn btn-ghost" href="#how">See how it works</a>
+  </div>
+
+  <div class="terminal" id="demo" role="img" aria-label="Example payment checks: two agent spend requests of 1.2 and 0.5 OKB both pass clearance, a third request of 4.0 OKB is reverted for exceeding the agent's soft cap, and the fleet is paused in a single transaction.">
+    <div class="terminal-bar">
+      <span class="terminal-dot" aria-hidden="true"></span><span class="terminal-dot" aria-hidden="true"></span><span class="terminal-dot" aria-hidden="true"></span>
+      <span class="terminal-title">POST /payment/check</span>
+    </div>
+    <div class="terminal-body" aria-hidden="true">
+      <div class="t-dim">AGENT_01 [0x71C...] request 1.2 OKB →</div>
+      <div class="t-approved">✓ CLEARANCE PASSED · fleet remaining: 458.8 OKB</div>
+      <div class="t-dim">AGENT_02 [0x3B8...] request 0.5 OKB →</div>
+      <div class="t-approved">✓ CLEARANCE PASSED · fleet remaining: 458.3 OKB</div>
+      <div class="t-dim">AGENT_01 [0x71C...] request 4.0 OKB →</div>
+      <div class="t-rejected">✗ REVERT: Agent Soft Cap Exceeded</div>
+      <div class="t-dim">$ orchestrator → emergency_pause()</div>
+      <div class="t-approved">✓ Fleet paused in a single transaction</div>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="item"><div class="num">196</div><div class="label">X Layer chain ID</div></div>
+    <div class="item"><div class="num">100%</div><div class="label">Atomic — no partial spend</div></div>
+    <div class="item"><div class="num">1 call</div><div class="label">To integrate per agent</div></div>
+  </div>
+</section>
+
+<section id="why" aria-label="Why on-chain enforcement">
+  <div class="section-head">
+    <div class="eyebrow" style="justify-content:center; display:inline-flex;"><span class="dot" aria-hidden="true"></span> THE PROBLEM</div>
+    <h2 class="display">"What stops an agent from overspending?"</h2>
+    <p>Every fleet builder hits this question eventually. There are only two possible answers.</p>
+  </div>
+  <div class="compare">
+    <div class="compare-card bad" aria-label="Without CapX">
+      <h3>Without CapX</h3>
+      <div class="compare-row"><span class="icon" aria-hidden="true">·</span> Budget caps live as a variable in application code</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">·</span> A bug, retry loop, or prompt injection can bypass it silently</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">·</span> You can't audit budget logic inside agents you don't control</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">·</span> The answer to "what stops overspend?" is: "our code, we hope"</div>
+    </div>
+    <div class="compare-card good" aria-label="With CapX">
+      <h3>With CapX</h3>
+      <div class="compare-row"><span class="icon" aria-hidden="true">✓</span> Budget caps are enforced by the EVM, not by any single app</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">✓</span> checkAndDeduct() is atomic — it reverts, it never partially executes</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">✓</span> Works even when you don't trust the agent on the other end</div>
+      <div class="compare-row"><span class="icon" aria-hidden="true">✓</span> The answer is: "the chain"</div>
+    </div>
+  </div>
+</section>
+
+<section id="how" aria-label="How it works">
+  <div class="section-head">
+    <div class="eyebrow" style="justify-content:center; display:inline-flex;"><span class="dot" aria-hidden="true"></span> HOW IT WORKS</div>
+    <h2 class="display">Four calls, zero trust required</h2>
+    <p>Any orchestrator integrates CapX with a single API call per payment.</p>
+  </div>
+  <div class="flow">
+    <div class="flow-card">
+      <div class="flow-num">01</div>
+      <h4>Create a policy</h4>
+      <p>Orchestrator registers its fleet's wallets, per-agent soft caps, and a global hard cap.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">02</div>
+      <h4>Sign the invoice</h4>
+      <p>Provider signs its invoice with the wallet tied to its on-chain agent identity. Tampering fails verification.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">03</div>
+      <h4>Check and deduct</h4>
+      <p>Before paying, the sub-agent's spend is checked against both caps atomically on X Layer.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">04</div>
+      <h4>Approved or reverted</h4>
+      <p>Payment clears and the ledger updates — or the call reverts outright. No in-between state.</p>
+    </div>
+  </div>
+</section>
+
+<section id="get-started" aria-label="Get started">
+  <div class="cta-band">
+    <h2 class="display">Give your fleet a spending ceiling it can't talk its way past</h2>
+    <p>Integrate CapX in one API call. Watch it live on the dashboard.</p>
+    <a class="btn btn-primary" href="dashboard.html">Launch Dashboard<span aria-hidden="true"> →</span></a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span class="mono">CapX</span> · An OKX.AI Agent Service Provider · Software Utility · Settled on X Layer (Chain ID 196)
+</footer>
+
+</body>
+</html>

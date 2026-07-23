@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+backend/node_modules/
+
+# secrets — never commit real keys
+.env
+backend/.env
+.env.local
+
+# local runtime data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backend/server.log
+*.log
+
+# hardhat
+artifacts/
+cache/
+typechain-types/
+
+# OS
+.DS_Store
+Thumbs.db
